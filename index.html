@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<title>CRUDO · Panel de Ventas Marzo 2025</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0D0D0D;
+    --surface: #161616;
+    --surface2: #1E1E1E;
+    --border: #2A2A2A;
+    --text: #F0EDE8;
+    --muted: #666;
+    --viltrum: #FF3B3B;
+    --viltrum-dim: rgba(255,59,59,0.12);
+    --omni: #F5A623;
+    --omni-dim: rgba(245,166,35,0.12);
+    --oli: #3BFF8A;
+    --oli-dim: rgba(59,255,138,0.12);
+    --quincena: #FF6B6B;
+    --pico: #FFD93D;
+    --normal: #4ECDC4;
+    --ahead: #3BFF8A;
+    --behind: #FF3B3B;
+    --warning: #F5A623;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Noise overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 28px 20px 60px; }
+
+  /* HEADER */
+  .header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 32px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+  .header-left h1 { font-family: 'Bebas Neue', sans-serif; font-size: 52px; letter-spacing: 3px; line-height: 1; color: var(--text); }
+  .header-left h1 span { color: var(--viltrum); }
+  .header-left p { color: var(--muted); font-size: 12px; letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; font-family: 'DM Mono', monospace; }
+  .header-right { text-align: right; }
+  .costos-badge { background: var(--surface2); border: 1px solid var(--border); padding: 8px 14px; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); }
+  .costos-badge strong { color: var(--text); font-size: 16px; display: block; }
+
+  /* MODE SELECTOR */
+  .mode-section { margin-bottom: 28px; }
+  .section-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .mode-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .mode-card::before { content: ''; position: absolute; inset: 0; opacity: 0; transition: opacity 0.2s; }
+  .mode-card.viltrum::before { background: var(--viltrum-dim); }
+  .mode-card.omni::before   { background: var(--omni-dim); }
+  .mode-card.oli::before    { background: var(--oli-dim); }
+  .mode-card.active { border-width: 2px; }
+  .mode-card.active::before { opacity: 1; }
+  .mode-card.active.viltrum { border-color: var(--viltrum); }
+  .mode-card.active.omni    { border-color: var(--omni); }
+  .mode-card.active.oli     { border-color: var(--oli); }
+  .mode-card:hover::before  { opacity: 0.6; }
+  .mode-name { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; }
+  .mode-card.viltrum .mode-name { color: var(--viltrum); }
+  .mode-card.omni    .mode-name { color: var(--omni); }
+  .mode-card.oli     .mode-name { color: var(--oli); }
+  .mode-pct { font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 500; margin: 4px 0; }
+  .mode-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+  .mode-pe  { font-family: 'DM Mono', monospace; font-size: 11px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); color: var(--muted); }
+  .mode-pe strong { font-size: 13px; }
+  .mode-card.viltrum .mode-pe strong { color: var(--viltrum); }
+  .mode-card.omni    .mode-pe strong { color: var(--omni); }
+  .mode-card.oli     .mode-pe strong { color: var(--oli); }
+  .active-badge { position: absolute; top: 10px; right: 10px; font-size: 9px; font-family: 'DM Mono', monospace; letter-spacing: 1px; text-transform: uppercase; padding: 2px 7px; border-radius: 20px; }
+  .viltrum .active-badge { background: var(--viltrum); color: #000; }
+  .omni    .active-badge { background: var(--omni); color: #000; }
+  .oli     .active-badge { background: var(--oli); color: #000; }
+
+  /* KPI ROW */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 28px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .kpi-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .kpi-value { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1px; line-height: 1; }
+  .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 4px; font-family: 'DM Mono', monospace; }
+  .kpi-value.ahead  { color: var(--ahead); }
+  .kpi-value.behind { color: var(--behind); }
+  .kpi-value.warning{ color: var(--warning); }
+  .kpi-value.neutral{ color: var(--text); }
+
+  /* PROGRESS BAR */
+  .progress-section { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 28px; }
+  .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .progress-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px; }
+  .progress-pct { font-family: 'DM Mono', monospace; font-size: 20px; }
+  .prog-track { background: var(--border); border-radius: 4px; height: 12px; position: relative; overflow: visible; }
+  .prog-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; position: relative; }
+  .prog-fill.viltrum { background: linear-gradient(90deg, #991f1f, var(--viltrum)); }
+  .prog-fill.omni    { background: linear-gradient(90deg, #8a5a00, var(--omni)); }
+  .prog-fill.oli     { background: linear-gradient(90deg, #1a7a45, var(--oli)); }
+  .prog-marker { position: absolute; top: -18px; transform: translateX(-50%); font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); white-space: nowrap; }
+  .prog-marker::after { content: ''; display: block; width: 1px; height: 28px; background: var(--muted); margin: 2px auto 0; opacity: 0.4; }
+  .checkpoints { display: flex; justify-content: space-between; margin-top: 24px; }
+  .cp { text-align: center; }
+  .cp-label { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  .cp-target { font-family: 'DM Mono', monospace; font-size: 12px; margin-top: 2px; }
+  .cp-status { font-size: 10px; margin-top: 2px; padding: 2px 8px; border-radius: 20px; display: inline-block; }
+  .cp-status.pass { background: rgba(59,255,138,0.15); color: var(--ahead); }
+  .cp-status.fail { background: rgba(255,59,59,0.15); color: var(--behind); }
+  .cp-status.pending { background: var(--surface2); color: var(--muted); }
+
+  /* ALERT BOX */
+  .alert-box { border-radius: 10px; padding: 16px 20px; margin-bottom: 24px; border-left: 4px solid; display: none; }
+  .alert-box.visible { display: flex; gap: 14px; align-items: flex-start; }
+  .alert-box.green  { background: rgba(59,255,138,0.07); border-color: var(--ahead); }
+  .alert-box.yellow { background: rgba(245,166,35,0.07);  border-color: var(--warning); }
+  .alert-box.red    { background: rgba(255,59,59,0.07);   border-color: var(--behind); }
+  .alert-icon { font-size: 22px; flex-shrink: 0; }
+  .alert-title { font-family: 'Bebas Neue', sans-serif; font-size: 17px; letter-spacing: 1px; margin-bottom: 3px; }
+  .alert-green  .alert-title { color: var(--ahead); }
+  .alert-yellow .alert-title { color: var(--warning); }
+  .alert-red    .alert-title { color: var(--behind); }
+  .alert-body { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .alert-body strong { color: var(--text); }
+
+  /* CALENDAR */
+  .calendar-section { margin-bottom: 28px; }
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+  .cal-header-cell { text-align: center; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; color: var(--muted); padding: 6px 0; text-transform: uppercase; }
+  .day-cell {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    min-height: 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .day-cell:hover { border-color: #444; transform: translateY(-1px); }
+  .day-cell.empty { border: none; cursor: default; background: transparent; }
+  .day-cell.empty:hover { transform: none; }
+  .day-num { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+  .day-type-dot { width: 6px; height: 6px; border-radius: 50%; position: absolute; top: 8px; right: 8px; }
+  .day-cell.quincena .day-type-dot { background: var(--quincena); }
+  .day-cell.pico     .day-type-dot { background: var(--pico); }
+  .day-cell.normal   .day-type-dot { background: var(--normal); }
+  .day-meta { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); }
+  .day-real { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; }
+  .day-real.ahead  { color: var(--ahead); }
+  .day-real.behind { color: var(--behind); }
+  .day-real.exact  { color: var(--warning); }
+  .day-cell.done   { background: var(--surface); }
+  .day-cell.today  { border-color: var(--omni); border-width: 2px; }
+  .day-cell.checkpoint { box-shadow: 0 0 0 1px rgba(245,166,35,0.4); }
+  .checkpoint-flag { font-size: 8px; font-family: 'DM Mono', monospace; color: var(--omni); letter-spacing: 0.5px; }
+
+  /* INPUT MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; width: 340px; }
+  .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 2px; margin-bottom: 4px; }
+  .modal-sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; font-family: 'DM Mono', monospace; }
+  .modal-meta { background: var(--surface2); border-radius: 8px; padding: 12px; margin-bottom: 20px; }
+  .modal-meta-row { display: flex; justify-content: space-between; font-family: 'DM Mono', monospace; font-size: 11px; padding: 3px 0; }
+  .modal-meta-row span:first-child { color: var(--muted); }
+  .input-group { margin-bottom: 16px; }
+  .input-label { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .input-field {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 14px; color: var(--text);
+    font-family: 'DM Mono', monospace; font-size: 18px; outline: none;
+    transition: border-color 0.2s;
+  }
+  .input-field:focus { border-color: var(--omni); }
+  .modal-buttons { display: flex; gap: 8px; margin-top: 20px; }
+  .btn { flex: 1; padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 0.5px; transition: opacity 0.2s; }
+  .btn:hover { opacity: 0.85; }
+  .btn-primary { background: var(--omni); color: #000; }
+  .btn-secondary { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+  .btn-danger { background: rgba(255,59,59,0.2); color: var(--behind); border: 1px solid rgba(255,59,59,0.3); }
+
+  /* LEGEND */
+  .legend { display: flex; gap: 18px; margin-bottom: 12px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* RECOVERY TABLE */
+  .recovery { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 28px; display: none; }
+  .recovery.visible { display: block; }
+  .recovery-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px; margin-bottom: 12px; color: var(--warning); }
+  .rec-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .rec-table th { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+  .rec-table td { padding: 8px 10px; border-bottom: 1px solid rgba(42,42,42,0.5); font-family: 'DM Mono', monospace; }
+  .rec-table tr:last-child td { border-bottom: none; }
+  .rec-highlight { color: var(--ahead); font-weight: 500; }
+
+  .tag { display: inline-block; font-size: 9px; font-family: 'DM Mono', monospace; padding: 2px 8px; border-radius: 20px; letter-spacing: 0.5px; }
+  .tag.quincena { background: rgba(255,107,107,0.15); color: var(--quincena); }
+  .tag.pico     { background: rgba(255,217,61,0.15);  color: var(--pico); }
+  .tag.normal   { background: rgba(78,205,196,0.15);  color: var(--normal); }
+
+  /* CHECKPOINT PANEL */
+  .cp-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 28px; }
+  .cp-panel-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px; margin-bottom: 14px; }
+  .cp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .cp-card { background: var(--surface2); border-radius: 8px; padding: 14px; border: 1px solid var(--border); }
+  .cp-card-label { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .cp-card-days { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; }
+  .cp-card-target { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .cp-card-real { font-family: 'DM Mono', monospace; font-size: 13px; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); }
+  .cp-card-real.ahead { color: var(--ahead); }
+  .cp-card-real.behind { color: var(--behind); }
+  .cp-card-real.pending { color: var(--muted); }
+  .cp-card-action { font-size: 10px; margin-top: 6px; line-height: 1.4; color: var(--muted); }
+
+  footer { text-align: center; font-family: 'DM Mono', monospace; font-size: 10px; color: #333; margin-top: 40px; letter-spacing: 1px; }
+
+  @media (max-width: 700px) {
+    .modes { grid-template-columns: 1fr; }
+    .kpis  { grid-template-columns: repeat(2, 1fr); }
+    .cp-grid { grid-template-columns: repeat(2, 1fr); }
+    .calendar-grid { gap: 3px; }
+    .day-cell { min-height: 58px; padding: 5px 4px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <h1>CRUDO<span>·</span></h1>
+      <p>Panel de ventas · Marzo 2025 · 31 días operativos</p>
+    </div>
+    <div class="header-right">
+      <div class="costos-badge">
+        COSTOS FIJOS MARZO
+        <strong>$6,270,000</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODO ACTIVO -->
+  <div class="mode-section">
+    <div class="section-label">Modo activo — haz clic para cambiar</div>
+    <div class="modes">
+      <div class="mode-card viltrum active" onclick="setMode('viltrum')">
+        <span class="active-badge">ACTIVO</span>
+        <div class="mode-name">VILTRUM</div>
+        <div class="mode-pct">45%</div>
+        <div class="mode-desc">Máximo margen · Arranque del mes · Proteger rentabilidad</div>
+        <div class="mode-pe">PE: <strong id="pe-viltrum">$13,933,333</strong></div>
+      </div>
+      <div class="mode-card omni" onclick="setMode('omni')">
+        <div class="mode-name">OMNI</div>
+        <div class="mode-pct">43%</div>
+        <div class="mode-desc">Ritmo base · Equilibrio volumen-margen</div>
+        <div class="mode-pe">PE: <strong id="pe-omni">$14,581,395</strong></div>
+      </div>
+      <div class="mode-card oli" onclick="setMode('oli')">
+        <div class="mode-name">OLI</div>
+        <div class="mode-pct">40%</div>
+        <div class="mode-desc">Máximo volumen · Recuperación agresiva</div>
+        <div class="mode-pe">PE: <strong id="pe-oli">$15,675,000</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi-label">Ventas acumuladas</div>
+      <div class="kpi-value neutral" id="kpi-acum">$0</div>
+      <div class="kpi-sub" id="kpi-acum-sub">0 días registrados</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Meta acumulada</div>
+      <div class="kpi-value neutral" id="kpi-meta">$0</div>
+      <div class="kpi-sub" id="kpi-meta-sub">Días 1 – 0</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Diferencia</div>
+      <div class="kpi-value neutral" id="kpi-diff">$0</div>
+      <div class="kpi-sub" id="kpi-diff-sub">Sin datos</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Días restantes</div>
+      <div class="kpi-value neutral" id="kpi-dias">31</div>
+      <div class="kpi-sub" id="kpi-dias-sub">Meta diaria ajustada: —</div>
+    </div>
+  </div>
+
+  <!-- BARRA DE PROGRESO -->
+  <div class="progress-section">
+    <div class="progress-header">
+      <span class="progress-title">AVANCE HACIA EL PUNTO DE EQUILIBRIO</span>
+      <span class="progress-pct" id="prog-pct">0%</span>
+    </div>
+    <div class="prog-track">
+      <div class="prog-fill viltrum" id="prog-fill" style="width:0%"></div>
+    </div>
+    <div class="checkpoints" id="cp-bar-row"></div>
+  </div>
+
+  <!-- ALERTA DINÁMICA -->
+  <div class="alert-box" id="alert-box">
+    <div class="alert-icon" id="alert-icon">📊</div>
+    <div>
+      <div class="alert-title" id="alert-title">—</div>
+      <div class="alert-body" id="alert-body">—</div>
+    </div>
+  </div>
+
+  <!-- TABLA DE RECUPERACIÓN -->
+  <div class="recovery" id="recovery-section">
+    <div class="recovery-title">⚡ PLAN DE RECUPERACIÓN</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;" id="rec-intro">—</p>
+    <table class="rec-table">
+      <thead>
+        <tr>
+          <th>Tipo de día</th>
+          <th>Meta original</th>
+          <th>Meta ajustada (+recup.)</th>
+          <th>Días restantes</th>
+          <th>Aporte total</th>
+        </tr>
+      </thead>
+      <tbody id="rec-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- CHECKPOINTS -->
+  <div class="cp-panel">
+    <div class="cp-panel-title">PUNTOS DE CONTROL</div>
+    <div class="cp-grid" id="cp-grid"></div>
+  </div>
+
+  <!-- CALENDARIO -->
+  <div class="calendar-section">
+    <div class="section-label" style="margin-bottom:10px;">Calendario de metas · Haz clic en un día para registrar ventas</div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--quincena)"></div> Quincena (3x)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--pico)"></div> Fin de semana (2x)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--normal)"></div> Normal (1x)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--omni);width:10px;height:10px;border-radius:2px"></div> Punto de control</div>
+    </div>
+    <div class="calendar-grid" id="calendar-grid"></div>
+  </div>
+
+  <footer>TIENDA CRUDO · PANEL FINANCIERO MARZO 2025 · COSTOS FIJOS $6,270,000</footer>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Día 1</div>
+    <div class="modal-sub" id="modal-sub">Sábado 1 de marzo</div>
+    <div class="modal-meta">
+      <div class="modal-meta-row"><span>Tipo de día</span><span id="m-tipo">—</span></div>
+      <div class="modal-meta-row"><span>Meta</span><span id="m-meta">—</span></div>
+      <div class="modal-meta-row"><span>Modo activo</span><span id="m-modo">—</span></div>
+    </div>
+    <div class="input-group">
+      <div class="input-label">Venta real del día ($)</div>
+      <input class="input-field" type="number" id="modal-input" placeholder="Ej: 450000" min="0">
+    </div>
+    <div class="modal-buttons">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-danger" id="btn-clear" onclick="clearDay()" style="display:none">Borrar</button>
+      <button class="btn btn-primary" onclick="saveDay()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CF = 6270000;
+const MODES = {
+  viltrum: { label: 'VILTRUM', pct: 0.45, color: 'var(--viltrum)', cls: 'viltrum' },
+  omni:    { label: 'OMNI',    pct: 0.43, color: 'var(--omni)',    cls: 'omni'    },
+  oli:     { label: 'OLI',     pct: 0.40, color: 'var(--oli)',     cls: 'oli'     },
+};
+const CHECKPOINTS = [7, 14, 21, 28];
+
+// March 2025: day 1 = Saturday (weekday index 5)
+// weekday: 0=Mon,1=Tue,2=Wed,3=Thu,4=Fri,5=Sat,6=Sun
+function getDayInfo(d) {
+  const startWd = 5; // March 1 = Saturday
+  const wd = (startWd + d - 1) % 7;
+  const isWeekend = wd >= 4; // Fri, Sat, Sun
+  const isQuincena = d === 1 || d === 15;
+  const dayNames = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  const fullNames = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+  if (isQuincena) return { tipo: 'quincena', weight: 3, name: dayNames[wd], fullName: fullNames[wd] };
+  if (isWeekend)  return { tipo: 'pico',     weight: 2, name: dayNames[wd], fullName: fullNames[wd] };
+  return             { tipo: 'normal',     weight: 1, name: dayNames[wd], fullName: fullNames[wd] };
+}
+
+function computeTargets(modeKey) {
+  const m = MODES[modeKey];
+  const pe = CF / m.pct;
+  let totalW = 0;
+  for (let d = 1; d <= 31; d++) totalW += getDayInfo(d).weight;
+  const unit = pe / totalW;
+  return { pe, unit, targets: Array.from({length:31}, (_,i) => unit * getDayInfo(i+1).weight) };
+}
+
+// State
+let state = {
+  mode: 'viltrum',
+  sales: {}, // day (1-31) => amount
+};
+
+function loadState() {
+  try {
+    const s = localStorage.getItem('crudo_marzo');
+    if (s) state = JSON.parse(s);
+  } catch(e) {}
+}
+function saveState() {
+  try { localStorage.setItem('crudo_marzo', JSON.stringify(state)); } catch(e) {}
+}
+
+function fmt(n) {
+  if (n === null || n === undefined) return '—';
+  const abs = Math.abs(n);
+  if (abs >= 1000000) return (n < 0 ? '-' : '') + '$' + (abs/1000000).toFixed(2) + 'M';
+  return (n < 0 ? '-$' : '$') + Math.round(abs).toLocaleString('es-CO');
+}
+function fmtShort(n) {
+  const abs = Math.abs(n);
+  if (abs >= 1000000) return (n<0?'-':'')+'$'+(abs/1000000).toFixed(1)+'M';
+  if (abs >= 1000) return (n<0?'-':'')+'$'+(abs/1000).toFixed(0)+'k';
+  return '$0';
+}
+
+function setMode(m) {
+  state.mode = m;
+  saveState();
+  document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
+  const card = document.querySelector('.mode-card.' + m);
+  card.classList.add('active');
+  // Update active badge
+  document.querySelectorAll('.active-badge').forEach(b => b.remove());
+  const badge = document.createElement('span');
+  badge.className = 'active-badge';
+  badge.textContent = 'ACTIVO';
+  card.insertBefore(badge, card.firstChild);
+  // Update progress bar class
+  document.getElementById('prog-fill').className = 'prog-fill ' + m;
+  render();
+}
+
+let modalDay = null;
+function openModal(d) {
+  modalDay = d;
+  const info = getDayInfo(d);
+  const { targets } = computeTargets(state.mode);
+  const modeInfo = MODES[state.mode];
+  const tipo = { quincena: '🔴 QUINCENA', pico: '🟡 Fin de semana', normal: '⚪ Normal' };
+  document.getElementById('modal-title').textContent = `Día ${d} — ${info.fullName}`;
+  document.getElementById('modal-sub').textContent = `${d} de marzo de 2025`;
+  document.getElementById('m-tipo').textContent = tipo[info.tipo];
+  document.getElementById('m-meta').textContent = fmt(targets[d-1]);
+  document.getElementById('m-modo').textContent = `MODO ${modeInfo.label} (${(modeInfo.pct*100).toFixed(0)}%)`;
+  document.getElementById('modal-input').value = state.sales[d] !== undefined ? state.sales[d] : '';
+  document.getElementById('btn-clear').style.display = state.sales[d] !== undefined ? 'block' : 'none';
+  document.getElementById('modal').classList.add('open');
+  setTimeout(() => document.getElementById('modal-input').focus(), 100);
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  modalDay = null;
+}
+function saveDay() {
+  const val = parseFloat(document.getElementById('modal-input').value);
+  if (isNaN(val) || val < 0) return;
+  state.sales[modalDay] = val;
+  saveState();
+  closeModal();
+  render();
+}
+function clearDay() {
+  delete state.sales[modalDay];
+  saveState();
+  closeModal();
+  render();
+}
+document.getElementById('modal-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveDay();
+  if (e.key === 'Escape') closeModal();
+});
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal')) closeModal();
+});
+
+function render() {
+  const { pe, targets } = computeTargets(state.mode);
+  const modeInfo = MODES[state.mode];
+
+  // Compute acumulados
+  const sortedDays = Object.keys(state.sales).map(Number).sort((a,b)=>a-b);
+  const lastDay = sortedDays.length ? Math.max(...sortedDays) : 0;
+  let acumReal = 0, acumMeta = 0;
+  for (let d = 1; d <= lastDay; d++) {
+    acumMeta += targets[d-1];
+    if (state.sales[d] !== undefined) acumReal += state.sales[d];
+    else if (d < lastDay) acumReal += 0; // missing day = 0
+  }
+  // Only count registered days
+  let realSum = 0, metaSum = 0, regCount = 0;
+  sortedDays.forEach(d => { realSum += state.sales[d]; metaSum += targets[d-1]; regCount++; });
+  // Acum up to last registered day
+  let acumByDay = 0, metaByDay = 0;
+  for (let d = 1; d <= (lastDay || 0); d++) {
+    metaByDay += targets[d-1];
+    acumByDay += (state.sales[d] || 0);
+  }
+
+  const diff = acumByDay - metaByDay;
+  const remaining = 31 - lastDay;
+  const remainingTargetSum = targets.slice(lastDay).reduce((a,b)=>a+b,0);
+  const needed = Math.max(0, pe - acumByDay);
+  const adjDaily = remaining > 0 ? needed / remaining : 0;
+
+  // Remaining day weights by type
+  let remW = { quincena: 0, pico: 0, normal: 0, countQ: 0, countP: 0, countN: 0 };
+  for (let d = lastDay+1; d <= 31; d++) {
+    const info = getDayInfo(d);
+    remW[info.tipo] += info.weight;
+    remW['count'+info.tipo[0].toUpperCase() + info.tipo.slice(1)] = (remW['count'+info.tipo[0].toUpperCase() + info.tipo.slice(1)] || 0) + 1;
+  }
+  // Fix counts
+  let remCounts = { quincena: 0, pico: 0, normal: 0 };
+  for (let d = lastDay+1; d <= 31; d++) remCounts[getDayInfo(d).tipo]++;
+
+  // KPIs
+  document.getElementById('kpi-acum').textContent = lastDay ? fmt(acumByDay) : '$0';
+  document.getElementById('kpi-acum').className = 'kpi-value ' + (lastDay ? (diff >= 0 ? 'ahead' : 'behind') : 'neutral');
+  document.getElementById('kpi-acum-sub').textContent = `${lastDay} días registrados`;
+
+  document.getElementById('kpi-meta').textContent = lastDay ? fmt(metaByDay) : '$0';
+  document.getElementById('kpi-meta').className = 'kpi-value neutral';
+  document.getElementById('kpi-meta-sub').textContent = lastDay ? `Días 1 – ${lastDay}` : 'Sin datos aún';
+
+  document.getElementById('kpi-diff').textContent = lastDay ? (diff >= 0 ? '+' : '') + fmt(diff) : '$0';
+  document.getElementById('kpi-diff').className = 'kpi-value ' + (!lastDay ? 'neutral' : diff > 0 ? 'ahead' : diff < 0 ? 'behind' : 'exact');
+  document.getElementById('kpi-diff-sub').textContent = !lastDay ? 'Registra el primer día' : diff >= 0 ? 'Por encima de la meta' : 'Por debajo de la meta';
+
+  document.getElementById('kpi-dias').textContent = remaining;
+  document.getElementById('kpi-dias').className = 'kpi-value ' + (remaining <= 5 ? 'behind' : remaining <= 10 ? 'warning' : 'neutral');
+  document.getElementById('kpi-dias-sub').textContent = remaining > 0 && lastDay ? `Meta ajustada: ${fmtShort(adjDaily)}/día` : '—';
+
+  // Progress
+  const progPct = Math.min(100, pe > 0 ? (acumByDay / pe) * 100 : 0);
+  document.getElementById('prog-fill').style.width = progPct + '%';
+  document.getElementById('prog-pct').textContent = progPct.toFixed(1) + '%';
+
+  // Alert
+  const alertBox = document.getElementById('alert-box');
+  if (!lastDay) {
+    alertBox.className = 'alert-box';
+  } else {
+    const pctBehind = Math.abs(diff) / metaByDay;
+    let cls, icon, title, body;
+    if (diff >= 0) {
+      cls = 'green'; icon = '🚀';
+      title = `¡VAS ${fmt(diff)} POR ENCIMA DE LA META!`;
+      body = `Llevas <strong>${fmt(acumByDay)}</strong> vendidos en ${lastDay} días. El modo <strong>${modeInfo.label}</strong> está funcionando. Te faltan <strong>${fmt(needed)}</strong> para alcanzar el PE.`;
+    } else if (pctBehind <= 0.15) {
+      cls = 'yellow'; icon = '⚠️';
+      title = `LIGERAMENTE POR DEBAJO — MODO ${modeInfo.label} PUEDE SOSTENERSE`;
+      body = `Brecha de <strong>${fmt(Math.abs(diff))}</strong> (${(pctBehind*100).toFixed(1)}% de la meta acumulada). Ajusta las metas de los próximos días sin cambiar de modo. Meta diaria ajustada: <strong>${fmtShort(adjDaily)}</strong>.`;
+    } else {
+      cls = 'red'; icon = '🔴';
+      const suggested = diff < -(metaByDay * 0.30) ? 'OLI (40%)' : 'OMNI (43%)';
+      title = `BRECHA CRÍTICA — CONSIDERA CAMBIAR A MODO ${suggested}`;
+      body = `Llevas <strong>${fmt(Math.abs(diff))}</strong> por debajo (${(pctBehind*100).toFixed(1)}%). Con los días restantes a meta original necesitas <strong>${fmtShort(adjDaily)}/día</strong>. Baja el margen para ganar volumen o activa el plan de recuperación.`;
+    }
+    alertBox.className = `alert-box visible ${cls}`;
+    document.getElementById('alert-icon').textContent = icon;
+    document.getElementById('alert-title').textContent = title;
+    document.getElementById('alert-body').innerHTML = body;
+  }
+
+  // Recovery table
+  const recSection = document.getElementById('recovery-section');
+  if (lastDay && diff < 0) {
+    recSection.classList.add('visible');
+    const gap = Math.abs(diff);
+    document.getElementById('rec-intro').innerHTML =
+      `Tienes una brecha de <strong style="color:var(--behind)">${fmt(gap)}</strong>. Así queda distribuida la recuperación entre los días restantes:`;
+    const totalRemW = Object.entries(remCounts).reduce((s,[tipo,cnt]) => s + cnt * {quincena:3,pico:2,normal:1}[tipo], 0);
+    const unitRec = totalRemW > 0 ? needed / totalRemW : 0;
+    const { unit } = computeTargets(state.mode);
+    const rows = [
+      { tipo: 'Quincena 🔴', cls: 'quincena', w: 3, cnt: remCounts.quincena },
+      { tipo: 'Fin de semana 🟡', cls: 'pico', w: 2, cnt: remCounts.pico },
+      { tipo: 'Normal ⚪', cls: 'normal', w: 1, cnt: remCounts.normal },
+    ];
+    document.getElementById('rec-tbody').innerHTML = rows.map(r => {
+      if (!r.cnt) return '';
+      const original = unit * r.w;
+      const adjusted = unitRec * r.w;
+      const total = adjusted * r.cnt;
+      return `<tr>
+        <td><span class="tag ${r.cls}">${r.tipo}</span></td>
+        <td>${fmt(original)}</td>
+        <td class="rec-highlight">${fmt(adjusted)}</td>
+        <td>${r.cnt}</td>
+        <td>${fmt(total)}</td>
+      </tr>`;
+    }).join('');
+  } else {
+    recSection.classList.remove('visible');
+  }
+
+  // Checkpoints panel
+  const cpData = [
+    { day: 7,  label: 'Control 1', range: '1–7' },
+    { day: 14, label: 'Control 2', range: '1–14' },
+    { day: 21, label: 'Control 3', range: '1–21' },
+    { day: 28, label: 'Control 4', range: '1–28' },
+  ];
+  document.getElementById('cp-grid').innerHTML = cpData.map(cp => {
+    let cpMeta = 0, cpReal = 0, hasData = false;
+    for (let d = 1; d <= cp.day; d++) {
+      cpMeta += targets[d-1];
+      if (state.sales[d] !== undefined) { cpReal += state.sales[d]; hasData = true; }
+    }
+    const isPast = lastDay >= cp.day;
+    const cpDiff = cpReal - cpMeta;
+    let statusCls = 'pending', statusTxt = 'Pendiente';
+    let action = isPast ? (cpDiff >= 0 ? 'Meta superada ✓' : `Brecha: ${fmt(Math.abs(cpDiff))}`) : `Falta ${cp.day - lastDay} días`;
+    if (isPast) { statusCls = cpDiff >= 0 ? 'ahead' : 'behind'; statusTxt = cpDiff >= 0 ? fmt(cpReal) : fmt(cpReal); }
+
+    const thresholds = {
+      ahead:  `Mantén MODO ${modeInfo.label}`,
+      behind: cpDiff < -(cpMeta * 0.20) ? 'Activa MODO OLI (40%)' : 'Considera MODO OMNI (43%)',
+      pending: `Meta acumulada días 1–${cp.day}`,
+    };
+    return `<div class="cp-card">
+      <div class="cp-card-label">${cp.label} · Días ${cp.range}</div>
+      <div class="cp-card-days" style="color:var(--omni)">${cp.day}</div>
+      <div class="cp-card-target">Meta: ${fmtShort(cpMeta)}</div>
+      <div class="cp-card-real ${isPast ? statusCls : 'pending'}">${isPast ? statusTxt : '—'}</div>
+      <div class="cp-card-action">${thresholds[isPast ? (cpDiff>=0?'ahead':'behind') : 'pending']}</div>
+    </div>`;
+  }).join('');
+
+  // Calendar
+  const grid = document.getElementById('calendar-grid');
+  const days_header = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  let html = days_header.map(d => `<div class="cal-header-cell">${d}</div>`).join('');
+  // March 1 = Saturday = index 5, need 5 empty cells before
+  for (let i = 0; i < 5; i++) html += `<div class="day-cell empty"></div>`;
+  for (let d = 1; d <= 31; d++) {
+    const info = getDayInfo(d);
+    const isCP = CHECKPOINTS.includes(d);
+    const hasSale = state.sales[d] !== undefined;
+    const meta = targets[d-1];
+    const real = state.sales[d];
+    const diff2 = hasSale ? real - meta : null;
+    const diffCls = diff2 === null ? '' : diff2 >= 0 ? 'ahead' : 'behind';
+    html += `<div class="day-cell ${info.tipo} ${hasSale?'done':''} ${isCP?'checkpoint':''}"
+      onclick="openModal(${d})">
+      <div class="day-num">${d}</div>
+      ${isCP ? `<div class="checkpoint-flag">CP</div>` : ''}
+      <div class="day-type-dot"></div>
+      <div class="day-meta">${fmtShort(meta)}</div>
+      ${hasSale ? `<div class="day-real ${diffCls}">${fmtShort(real)}</div>` : ''}
+    </div>`;
+  }
+  grid.innerHTML = html;
+}
+
+loadState();
+// Restore active mode UI
+document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
+document.querySelectorAll('.active-badge').forEach(b => b.remove());
+const activeCard = document.querySelector('.mode-card.' + state.mode);
+activeCard.classList.add('active');
+const badge = document.createElement('span');
+badge.className = 'active-badge';
+badge.textContent = 'ACTIVO';
+activeCard.insertBefore(badge, activeCard.firstChild);
+document.getElementById('prog-fill').className = 'prog-fill ' + state.mode;
+render();
+</script>
+</body>
+</html>

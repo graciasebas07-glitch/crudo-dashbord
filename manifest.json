@@ -1,0 +1,22 @@
+{
+  "name": "CRUDO Dashboard",
+  "short_name": "CRUDO",
+  "description": "Dashboard CRUDO",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192x192/111111/ffffff?text=C",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://via.placeholder.com/512x512/111111/ffffff?text=C",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
